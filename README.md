@@ -14,7 +14,7 @@ This set of puzzles is meant to teach you how to use Triton from first principle
 
 Discord: https://discord.gg/gpumode #triton-puzzles
 
-![image](https://github.com/srush/Triton-Puzzles/assets/35882/3e18a47d-1311-43d0-a025-ed1f593f919e)
+<img width="2397" height="1195" alt="image" src="https://github.com/user-attachments/assets/a7e0219b-9df7-4640-a73e-35c1fa50b0f2" />
 
 
 
