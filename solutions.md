@@ -129,3 +129,18 @@ def mul_relu_block_back_kernel(x_ptr, y_ptr, dz_ptr, dx_ptr, N0, N1, B0: tl.cons
     
     tl.store(dx_ptr + mat_offset, out, mask)
 ```
+
+### 7
+@triton.jit
+def sum_kernel(x_ptr, z_ptr, N0, N1, T, B0: tl.constexpr, B1: tl.constexpr):
+    row_id = tl.program_id(0)
+    row_start = row_id * T
+
+    total_sum = 0.0
+    for chunk_idx in range(0, T, B1):
+        col_start = chunk_idx + tl.arange(0, B1)
+        mask = col_start < T
+        x = tl.load(row_start + x_ptr + col_start, mask)
+        total_sum += tl.sum(x, 0)
+        
+    tl.store(z_ptr + row_id, total_sum)
