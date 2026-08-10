@@ -144,3 +144,35 @@ def sum_kernel(x_ptr, z_ptr, N0, N1, T, B0: tl.constexpr, B1: tl.constexpr):
         total_sum += tl.sum(x, 0)
         
     tl.store(z_ptr + row_id, total_sum)
+
+### 8
+@triton.jit
+def softmax_kernel(x_ptr, z_ptr, N0, N1, T, B0: tl.constexpr, B1: tl.constexpr):
+    pid_0 = tl.program_id(0)
+    row_start = pid_0 * T
+    log2_e = 1.44269504
+
+    # find max
+    max_x = -float("inf")
+    for chunk_idx in range(0, T, B1):
+        col_start = chunk_idx + tl.arange(0, B1)
+        mask = col_start < T
+        x = tl.load(row_start + x_ptr + col_start, mask)
+        max_x = tl.maximum(tl.max(x, axis=0), max_x)
+
+    # find exp and sum
+    x_sum_exp = 0.0
+    for chunk_idx in range(0, T, B1):
+        col_start = chunk_idx + tl.arange(0, B1)
+        mask = col_start < T
+        x = tl.load(row_start + x_ptr + col_start, mask)
+        tmp = tl.exp2((x-max_x)*log2_e)
+        tl.store(row_start + z_ptr + col_start, tmp, mask)
+        x_sum_exp += tl.sum(tmp, axis=0)
+
+    # normalize
+    for chunk_idx in range(0, T, B1):
+        col_start = chunk_idx + tl.arange(0, B1)
+        mask = col_start < T
+        x = tl.load(row_start + z_ptr + col_start, mask)
+        tl.store(row_start + z_ptr + col_start, x / x_sum_exp, mask)
